@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>TestMan</title>	
+
+	<!-- CSS -->
+	<link href="css/bootstrap.min.css" rel="stylesheet"/>
+	<link href="css/toastr.min.css" rel="stylesheet"/>
+	<link href="css/sandbox.css" rel="stylesheet"/>
+
+	<!-- SRC -->
+	<script type="text/javascript" src="src/scale-mngr.js"></script>
+
+	<!-- INIT -->
+	<script type="text/javascript">
+
+		//NODE / LIB
+		window.jQuery = window.$ = require('jquery');
+		require('bootstrap');
+		window.toastr = require('toastr');
+		var remote = require('electron').remote;
+		var ipc = require('electron').ipcRenderer;
+		var shell = require("electron").shell;
+		var path = require('path');
+		var ip = require('ip');
+		var net = require('net');
+		var express = require('express');
+		var app = express();
+
+		toastr.options.positionClass = "toast-bottom-left";
+
+		var sandboxManager;
+		var contentPath;
+		ipc.on('get-data', function (event, data) {
+
+			document.getElementById('sandbox-webview').loadURL(data.url);
+			document.getElementById('sandbox-webview').openDevTools();
+
+			sandboxManager = new SandboxManager(data.path);
+    		sandboxManager.initLocalHost(data.path, 8000);
+
+    		contentPath = data.path;
+		});
+
+		document.addEventListener("DOMContentLoaded", function(event) {
+
+			document.getElementById('sandbox-webview').addEventListener("dom-ready", function(){
+
+				sandboxManager.init();
+				sandboxManager.toFit();
+				sandboxManager.addToRecent(contentPath);
+
+			});
+
+		});
+
+	</script>
+
+</head>
+
+<body style="margin:0; padding:0">
+
+	<nav id="nav" class="navbar navbar-default navbar-fixed-top">
+		<div id="nav-container" class="container">
+
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#" style="font-size: 12pt">TestMan</a>
+
+				<div style="float:left;">
+					<div class="btn-group btn-group-sm" role="group" aria-label="...">
+						<button id="btn-reload" class="btn btn-default" type="submit">
+							<span class="icon-reload"></span>
+						</button>
+
+					  <div class="btn-group btn-group-sm" role="group">
+					    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					      <span class="icon-settings"></span>
+					      <span class="caret"></span>
+					    </button>
+					    <ul class="dropdown-menu">
+					      <li><a href="#" id="link-openDevTools">Open DevTools</a></li>
+					      <li><a href="#" id="link-clearLocal">Clear LocalStorage</a></li>
+					    </ul>
+					  </div>
+					</div>
+
+					<div class="btn-group btn-group-sm" data-toggle="buttons">
+					  <label id="radio-fit" class="btn btn-default active navbar-btn">
+					    <input type="radio" name="options" id="option1" autocomplete="off" checked>Fit
+					  </label>
+					  <label id='radio-full' class="btn btn-default navbar-btn">
+					    <input type="radio" name="options" id="option2" autocomplete="off">Full
+					  </label>
+					  <label id='radio-fixed' class="btn btn-default navbar-btn">
+					    <input type="radio" name="options" id="option2" autocomplete="off">Fixed
+					  </label>
+					</div>
+				</div>
+
+				<a href="#" id="ipLink" class="navbar-link">
+					<p id="ipLabel" class="navbar-text navbar-right" style="float:right; padding-right:5px;"></p>
+				</a>
+
+			</div>
+
+		</div>
+	</nav>
+		
+	<div id="webview-wrapper">
+		<webview id="sandbox-webview" style="float: left; margin-left: 0 !important;" src="www.google.com" preload="src/preload.js" nodeintegration disablewebsecurity></webview>
+	</div>
+
+	<div id="modal-size-prompt" class="modal fade" role="dialog">
+	  <div class="modal-dialog">
+
+	    <!-- Modal content-->
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal">&times;</button>
+	        <h4 class="modal-title">Modal Header</h4>
+	      </div>
+	      <div class="modal-body">
+	        <p>Some text in the modal.</p>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Confirm</button>
+	      </div>
+	    </div>
+
+	  </div>
+	</div>
+
+</body>
+</html>

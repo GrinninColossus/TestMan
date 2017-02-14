@@ -1,0 +1,50 @@
+body, html {
+    margin: 0;
+    padding-top: 50px;
+    overflow: hidden;
+    text-align: center;
+    min-width: 400px;
+}
+
+#nav-container {
+	white-space: nowrap;
+}
+
+#webview-wrapper {
+	margin: 0;
+	padding: 0;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	text-align: center;
+    transform-origin: 50% 50% 0;
+    -webkit-transform: scale(1);
+}
+
+#sandbox-webview {
+	position: relative;
+	width: 100vw;
+	height: calc(100vh - 50px);
+	overflow: hidden;
+	-webkit-transform: rotate(0deg);
+}
+
+.icon-reload {
+	background-image: url('../resources/icons/reload.png');
+	background-repeat: no-repeat;
+	padding-left: 22px;
+	padding-bottom: 15px;
+	padding-top: 3px;
+	display: inline; 
+}
+
+.icon-settings {
+	background-image: url('../resources/icons/settings.png');
+	background-repeat: no-repeat;
+	padding-left: 22px; 
+	padding-right: 5px;
+	padding-bottom: 15px;
+	padding-top: 3px;
+	display: inline; 
+}
+
