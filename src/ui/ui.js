@@ -5,7 +5,19 @@ UI.MainMenu = {
 	recent: {},
 	
 	init(){
-		$('#btn-new').click(this.openNew);
+		//$('#btn-new').click(this.openNew);
+
+		document.getElementById('btn-new').addEventListener('click', function(){
+			this.openNew();
+		}.bind(this));
+
+		document.getElementById('btn-getting-started').addEventListener('click', function(){
+			shell.openExternal('https://github.com/GrinninColossus/TestMan/blob/master/README.md', {active: true});
+		});
+
+		document.getElementById('btn-github').addEventListener('click', function(){
+			shell.openExternal('https://github.com/GrinninColossus/TestMan', {active: true});
+		});
 
 		this.getRecent();
 	},

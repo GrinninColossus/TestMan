@@ -16,6 +16,7 @@
 		//IPC
 		var BrowserWindow = require('electron').remote.BrowserWindow;
 		var app = require('electron').remote;
+		var shell = require("electron").shell;
 		var dialog = app.dialog;
 		var fs = require('fs');
 
@@ -48,11 +49,11 @@
 			<span class="icon-plus"></span> Open new
 		</button>
 
-		<button type="button" class="btn btn-default">
+		<button id="btn-getting-started" type="button" class="btn btn-default">
 			<span class="icon-liftoff"></span> Getting started
 		</button>
 		
-		<button type="button" class="btn btn-default">
+		<button id="btn-github" type="button" class="btn btn-default">
 			<span class="icon-github"></span> GitHub
 		</button>
 
@@ -69,6 +70,7 @@
 			</div>
 
 			<div id="list-recent" class="list-group">
+				
 				<!--
 				<button type="button" class="list-group-item">Cras justo odio</button>
 				<button type="button" class="list-group-item">Dapibus ac facilisis in</button>
@@ -77,6 +79,7 @@
 				<button id="random" type="button" class="list-group-item">Vestibulum at eros</button>
 				<button type="button" class="list-group-item">Cras justo odio</button>
 				-->
+				
 			</div>
 		</div>
 	</div>

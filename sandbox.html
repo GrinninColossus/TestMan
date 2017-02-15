@@ -49,7 +49,9 @@
 
 				sandboxManager.init();
 				sandboxManager.toFit();
-				sandboxManager.addToRecent(contentPath);
+				//sandboxManager.addToRecent(contentPath);
+
+				document.getElementById('sandbox-webview').insertCSS('canvas {margin: 0 !important;}');
 
 			});
 
@@ -68,7 +70,7 @@
 				<a class="navbar-brand" href="#" style="font-size: 12pt">TestMan</a>
 
 				<div style="float:left;">
-					<div class="btn-group btn-group-sm" role="group" aria-label="...">
+					<div class="btn-group btn-group-sm navbar-btn" role="group">
 						<button id="btn-reload" class="btn btn-default" type="submit">
 							<span class="icon-reload"></span>
 						</button>
@@ -85,6 +87,25 @@
 					  </div>
 					</div>
 
+					<div class="btn-group btn-group-sm navbar-btn" role="group">
+						<button id="radio-fit" class="btn btn-default" type="submit"> Fit </button>
+						<button id="radio-full" class="btn btn-default" type="submit"> Full </button>
+
+					  <div class="btn-group btn-group-sm" role="group">
+					    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ratio</button>
+					    <ul class="dropdown-menu">
+					    	<li><a href="#" id="4:3">4:3</a></li>
+							<li><a href="#" id="16:9">16:9</a></li>
+							<li><a href="#" id="16:10">16:10</a></li>
+							<li><a href="#" id="3:2">3:2</a></li>
+							<li><a href="#" id="8:5">8:5</a></li>
+							<li><a href="#" id="5:3">5:3</a></li>
+							<li><a href="#" id="custom-ratio">Custom</a></li>
+					    </ul>
+					  </div>
+					</div>
+
+					<!--
 					<div class="btn-group btn-group-sm" data-toggle="buttons">
 					  <label id="radio-fit" class="btn btn-default active navbar-btn">
 					    <input type="radio" name="options" id="option1" autocomplete="off" checked>Fit
@@ -93,9 +114,13 @@
 					    <input type="radio" name="options" id="option2" autocomplete="off">Full
 					  </label>
 					  <label id='radio-fixed' class="btn btn-default navbar-btn">
-					    <input type="radio" name="options" id="option2" autocomplete="off">Fixed
+					    <input type="radio" name="options" id="option2" autocomplete="off">Free
+					  </label>
+					  <label id='radio-fixed' class="btn btn-default navbar-btn">
+					    <input type="radio" name="options" id="option2" autocomplete="off">Ratio
 					  </label>
 					</div>
+					-->
 				</div>
 
 				<a href="#" id="ipLink" class="navbar-link">
