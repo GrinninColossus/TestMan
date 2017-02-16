@@ -10,7 +10,7 @@
 	<link href="css/sandbox.css" rel="stylesheet"/>
 
 	<!-- SRC -->
-	<script type="text/javascript" src="src/scale-mngr.js"></script>
+	<script type="text/javascript" src="src/sandbox-manager.js"></script>
 
 	<!-- INIT -->
 	<script type="text/javascript">
@@ -136,24 +136,23 @@
 		<webview id="sandbox-webview" style="float: left; margin-left: 0 !important;" src="www.google.com" preload="src/preload.js" nodeintegration disablewebsecurity></webview>
 	</div>
 
-	<div id="modal-size-prompt" class="modal fade" role="dialog">
-	  <div class="modal-dialog">
+	<div id="modal">
+		<div id="modal-div">
+			<div class="panel panel-default">
+			  <div class="panel-heading">Custom Aspect Ratio</div>
 
-	    <!-- Modal content-->
-	    <div class="modal-content">
-	      <div class="modal-header">
-	        <button type="button" class="close" data-dismiss="modal">&times;</button>
-	        <h4 class="modal-title">Modal Header</h4>
-	      </div>
-	      <div class="modal-body">
-	        <p>Some text in the modal.</p>
-	      </div>
-	      <div class="modal-footer">
-	        <button type="button" class="btn btn-default" data-dismiss="modal">Confirm</button>
-	      </div>
-	    </div>
+			  <div class="panel-body">
+			  	<input id="input-width" type="number" class="form-control" placeholder="width">
+				<input id="input-height" type="number" class="form-control" placeholder="height">
 
-	  </div>
+				<div style="float: right; margin-top: 5px;">
+					<button id="btn-cancel-modal" type="button" class="btn btn-default">Cancel</button>
+					<button id="btn-accept-modal" type="button" class="btn btn-success">Accept</button>
+				</div>
+			  </div>
+
+			</div>
+		</div>
 	</div>
 
 </body>

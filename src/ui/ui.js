@@ -41,8 +41,6 @@ UI.MainMenu = {
 			}
 
 		}
-
-
 	},
 
 	openNew(){

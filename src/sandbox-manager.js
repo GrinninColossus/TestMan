@@ -32,6 +32,26 @@ class SandboxManager {
 		document.getElementById('8:5').addEventListener('click', function(){ this.toRatio(8, 5); }.bind(this));
 		document.getElementById('5:3').addEventListener('click', function(){ this.toRatio(5, 3); }.bind(this));
 
+		/** Hides and unhides modal */
+		document.getElementById('btn-cancel-modal').addEventListener('click', function(){ 
+			document.getElementById('modal').style.visibility = 'hidden';
+		 }.bind(this));
+
+		document.getElementById('custom-ratio').addEventListener('click', function(){ 
+			document.getElementById('modal').style.visibility = 'visible';
+		 }.bind(this));
+
+		/** Sets custom aspect ratio size */
+		document.getElementById('btn-accept-modal').addEventListener('click', function(){ 
+
+			var width = document.getElementById('input-width').value;
+			var height = document.getElementById('input-height').value;
+			document.getElementById('modal').style.visibility = 'hidden';
+
+			this.toRatio(width, height);
+
+		 }.bind(this));
+
 		/** Opens the dev tools for the webview */
 		document.getElementById('link-openDevTools').addEventListener('click', function(){ 
 			document.getElementById('sandbox-webview').openDevTools();
@@ -154,9 +174,11 @@ class SandboxManager {
 
 			this.toRatio(height, width);
 
+			this.sandboxWin.setTitle("TestMan - FIT");
+			this.scaleMode = 'fit';
+
 		}, this);
 		
-		this.scaleMode = 'fit';
 	}
 
 	/** Changes browser window to 'Full' mode, which puts the browser window into full-screen */
@@ -171,6 +193,7 @@ class SandboxManager {
 			wrapper.style.width = '100vw';
 			wrapper.style.height = '100vh';
 
+		this.sandboxWin.setTitle("TestMan - FULL");
 		this.scaleMode = 'full';
 	}
 
@@ -196,7 +219,8 @@ class SandboxManager {
 			wrapper.style.width = ((window.screen.height * percentOfScreen) * this.aspectRatio) + 'px';
 
 			window.resizeTo(((window.screen.height * percentOfScreen) * this.aspectRatio), (window.screen.height * percentOfScreen) + this.toolbarOffset);
-			
+		
+		this.sandboxWin.setTitle("TestMan - " + width + ":" + height);
 		this.scaleMode = 'ratio';
 	}
 
