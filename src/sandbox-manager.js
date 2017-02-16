@@ -7,7 +7,7 @@ class SandboxManager {
 		this.canvasWidth = 1;
 		this.canvasHeight = 1;
 		this.aspectRatio = 1;
-		this.toolbarOffset = 50 + (window.outerHeight - window.innerHeight);
+		this.toolbarOffset = 25 + (window.outerHeight - window.innerHeight);
 		this.scaleMode = 'fit';	//Flags window current scale mode
 		this.returnScaleMode = 'toFit';	//Flags scale mode to return to after exiting full-screen mode
 		
@@ -250,8 +250,9 @@ class SandboxManager {
 			wrapper.style.height = (window.screen.height * percentOfScreen) + 'px';
 			wrapper.style.width = ((window.screen.height * percentOfScreen) * this.aspectRatio) + 'px';
 
-			window.resizeTo(((window.screen.height * percentOfScreen) * this.aspectRatio), (window.screen.height * percentOfScreen) + this.toolbarOffset);
-		
+		//Resize viewport to wrap webview container div + height of the toolbar
+		this.resizeViewPort($(wrapper).outerWidth(), $(wrapper).outerHeight() + 50);
+
 		this.sandboxWin.setTitle("TestMan - " + width + ":" + height);
 		this.scaleMode = 'ratio';
 	}
@@ -266,6 +267,22 @@ class SandboxManager {
 	reloadWebview(){
 		var webview = document.getElementById('sandbox-webview');
 			webview.loadURL(webview.src);
+	}
+
+	/** Sets inner width/height of window, unluke window.resize() which operates on outer width/height */
+	resizeViewPort(width, height) {
+	    if (window.outerWidth) {
+	        window.resizeTo(
+	            width + (window.outerWidth - window.innerWidth),
+	            height + (window.outerHeight - window.innerHeight)
+	        );
+	    } else {
+	        window.resizeTo(500, 500);
+	        window.resizeTo(
+	            width + (500 - document.body.offsetWidth),
+	            height + (500 - document.body.offsetHeight)
+	        );
+	    }
 	}
 
 
