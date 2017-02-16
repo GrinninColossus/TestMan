@@ -2,12 +2,13 @@
 class SandboxManager {
 
 	/** @constructor */
-	constructor(contentPath){
+	constructor(){
 
 		this.canvasWidth = 1;
 		this.canvasHeight = 1;
 		this.aspectRatio = 1;
-		this.toolbarOffset = 50 + (window.outerHeight - window.innerHeight);
+		this.initDone = false;	//Flag so that events aren't added more than once
+		this.toolbarOffset = 25 + (window.outerHeight - window.innerHeight);
 		this.scaleMode = 'fit';	//Flags window current scale mode
 		this.returnScaleMode = 'toFit';	//Flags scale mode to return to after exiting full-screen mode
 		this.fixedSize = {width: 500, height: 500}	//Keeps track of user-defined fixed window size
@@ -19,83 +20,72 @@ class SandboxManager {
 
 	/** Init event listeners for the sandbox toolbar */
 	init(){
-		var _this = this;
+		if (!this.initDone){
+			this.initDone = true;
 
-		document.getElementById('btn-reload').addEventListener('click', this.reloadWebview.bind(this));
-		document.getElementById('radio-fit').addEventListener('click', this.toFit.bind(this));
-		document.getElementById('radio-full').addEventListener('click', this.toFull.bind(this));
+			var _this = this;
 
-		document.getElementById('4:3').addEventListener('click', function(){ this.toRatio(4, 3); }.bind(this));
-		document.getElementById('16:9').addEventListener('click', function(){ this.toRatio(16, 9); }.bind(this));
-		document.getElementById('16:10').addEventListener('click', function(){ this.toRatio(16, 10); }.bind(this));
-		document.getElementById('3:2').addEventListener('click', function(){ this.toRatio(3, 2); }.bind(this));
-		document.getElementById('8:5').addEventListener('click', function(){ this.toRatio(8, 5); }.bind(this));
-		document.getElementById('5:3').addEventListener('click', function(){ this.toRatio(5, 3); }.bind(this));
+			document.getElementById('btn-reload').addEventListener('click', this.reloadWebview.bind(this));
+			document.getElementById('radio-fit').addEventListener('click', this.toFit.bind(this));
+			document.getElementById('radio-full').addEventListener('click', this.toFull.bind(this));
 
-		/** Hides and unhides modal */
-		document.getElementById('btn-cancel-modal').addEventListener('click', function(){ 
-			document.getElementById('modal').style.visibility = 'hidden';
-		 }.bind(this));
+			document.getElementById('4:3').addEventListener('click', function(){ this.toRatio(4, 3); }.bind(this));
+			document.getElementById('16:9').addEventListener('click', function(){ this.toRatio(16, 9); }.bind(this));
+			document.getElementById('16:10').addEventListener('click', function(){ this.toRatio(16, 10); }.bind(this));
+			document.getElementById('3:2').addEventListener('click', function(){ this.toRatio(3, 2); }.bind(this));
+			document.getElementById('8:5').addEventListener('click', function(){ this.toRatio(8, 5); }.bind(this));
+			document.getElementById('5:3').addEventListener('click', function(){ this.toRatio(5, 3); }.bind(this));
 
-		document.getElementById('custom-ratio').addEventListener('click', function(){ 
-			document.getElementById('modal').style.visibility = 'visible';
-		 }.bind(this));
+			/** Hides and unhides modal */
+			document.getElementById('btn-cancel-modal').addEventListener('click', function(){ 
+				document.getElementById('modal').style.visibility = 'hidden';
+			 }.bind(this));
 
-		/** Sets custom aspect ratio size */
-		document.getElementById('btn-accept-modal').addEventListener('click', function(){ 
+			document.getElementById('custom-ratio').addEventListener('click', function(){ 
+				document.getElementById('modal').style.visibility = 'visible';
+			 }.bind(this));
 
-			var width = document.getElementById('input-width').value;
-			var height = document.getElementById('input-height').value;
-			document.getElementById('modal').style.visibility = 'hidden';
+			/** Sets custom aspect ratio size */
+			document.getElementById('btn-accept-modal').addEventListener('click', function(){ 
 
-			this.toRatio(width, height);
+				var width = document.getElementById('input-width').value;
+				var height = document.getElementById('input-height').value;
+				document.getElementById('modal').style.visibility = 'hidden';
 
-		 }.bind(this));
+				this.toRatio(width, height);
 
-		/** Opens the dev tools for the webview */
-		document.getElementById('link-openDevTools').addEventListener('click', function(){ 
-			document.getElementById('sandbox-webview').openDevTools();
-		});
+			 }.bind(this));
 
-		/** Clears local storage for electron BrowserWindow as well as the webview */
-		document.getElementById('link-clearLocal').addEventListener('click', function(){
-			localStorage.clear();
-			document.getElementById('sandbox-webview').executeJavaScript("localStorage.clear();");
+			/** Opens the dev tools for the webview */
+			document.getElementById('link-openDevTools').addEventListener('click', function(){ 
+				document.getElementById('sandbox-webview').openDevTools();
+			});
 
-			toastr.success("Local storage cleared");
-		});
+			/** Clears local storage for electron BrowserWindow as well as the webview */
+			document.getElementById('link-clearLocal').addEventListener('click', function(){
+				localStorage.clear();
+				document.getElementById('sandbox-webview').executeJavaScript("localStorage.clear();");
 
-		/** Allows escape key to be used to leave full-screen and returns scale-mode to what it was previously */
-		document.addEventListener('keydown', function(event){
-			if (event.key == 'Escape'){
-				_this.sandboxWin.setFullScreen(false);
-				_this[_this.returnScaleMode]();
-			}
-		});
+				toastr.success("Local storage cleared");
+			});
 
-		/** Opens the webview content in the browser */
-		document.getElementById('ipLabel').addEventListener('click', function(e){
-			e.preventDefault();
-			shell.openExternal('http://'+this.href, {active: true});
+			/** Allows escape key to be used to leave full-screen and returns scale-mode to what it was previously */
+			document.addEventListener('keydown', function(event){
+				if (event.key == 'Escape'){
+					_this.sandboxWin.setFullScreen(false);
+					_this[_this.returnScaleMode]();
+				}
+			});
 
-			toastr.success("Opened in browser");
-		});
+			/** Opens the webview content in the browser */
+			document.getElementById('ipLabel').addEventListener('click', function(e){
+				e.preventDefault();
+				shell.openExternal('http://'+this.href, {active: true});
 
-	}
-
-	/** Adds the current project to the recent projects object in localStorage */
-	addToRecent(contentPath){
-		if (!localStorage.recent) { 
-			var recent = JSON.parse(localStorage.recent);
-		} else {
-			var recent = [];
+				toastr.success("Opened in browser");
+			});
 		}
 
-		var title = document.getElementById('sandbox-webview').getTitle();
-
-		recent.push({title: title, path: contentPath});
-
-		localStorage.setItem('recent', JSON.stringify(recent));
 	}
 
 	/**
@@ -111,7 +101,6 @@ class SandboxManager {
 		app.use(express.static(path.parse(localPath).dir));
 		app.use(express.static(path.join(path.parse(localPath).dir, '/FOLDERTOHTMLFILESTOSERVER')));
 		app.listen(listenOn, "0.0.0.0", 511, function(){
-			console.log("Listening on port " + listenOn);
 
 			var ipLabel = document.getElementById('ipLabel');
 			var ipPlusPort = ip.address() + ":" + listenOn;
@@ -200,7 +189,7 @@ class SandboxManager {
 	/**
 	 * Sets window size to given aspect ratio, height is automatically set to use 80% of avialable screen height
 	 * @param {Number} width
-	  @param {Number} height
+	 * @param {Number} height
 	 */
 	toRatio(width, height){
 		this.sandboxWin.setFullScreen(false);

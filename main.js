@@ -4,18 +4,16 @@ let win;
 
 function createWindow () {
 
-  win = new BrowserWindow({width: 800, height: 500,  
+  win = new BrowserWindow({width: 450, height: 600,  
                           webPreferences: { 
-                                            zoomFactor: 1.2, 
                                             webSecurity: false
                                           }, 
                           backgroundColor: '',
-                          titleBarStyle: "hidden",
-                          resizable: false,
-                          frame: false,
+                          resizable: true,
                           maximizable: false});
 
-  win.loadURL(`file://${__dirname}/index.html`);
+  win.loadURL(`file://${__dirname}/sandbox.html`);
+  win.setMenu(null);
 
   win.on('closed', () => {
     win = null

@@ -10,6 +10,7 @@
 	<link href="css/sandbox.css" rel="stylesheet"/>
 
 	<!-- SRC -->
+	<script type="text/javascript" src="src/menu.js" defer></script>
 	<script type="text/javascript" src="src/sandbox-manager.js"></script>
 
 	<!-- INIT -->
@@ -20,6 +21,7 @@
 		require('bootstrap');
 		window.toastr = require('toastr');
 		var remote = require('electron').remote;
+		var dialog = remote.dialog;
 		var ipc = require('electron').ipcRenderer;
 		var shell = require("electron").shell;
 		var path = require('path');
@@ -30,31 +32,9 @@
 
 		toastr.options.positionClass = "toast-bottom-left";
 
-		var sandboxManager;
-		var contentPath;
-		ipc.on('get-data', function (event, data) {
-
-			document.getElementById('sandbox-webview').loadURL(data.url);
-			document.getElementById('sandbox-webview').openDevTools();
-
-			sandboxManager = new SandboxManager(data.path);
-    		sandboxManager.initLocalHost(data.path, 8000);
-
-    		contentPath = data.path;
-		});
-
+		var sandboxManager = new SandboxManager();
 		document.addEventListener("DOMContentLoaded", function(event) {
-
-			document.getElementById('sandbox-webview').addEventListener("dom-ready", function(){
-
-				sandboxManager.init();
-				sandboxManager.toFit();
-				//sandboxManager.addToRecent(contentPath);
-
-				document.getElementById('sandbox-webview').insertCSS('canvas {margin: 0 !important;}');
-
-			});
-
+			sandboxManager.init();
 		});
 
 	</script>
@@ -65,72 +45,73 @@
 
 	<nav id="nav" class="navbar navbar-default navbar-fixed-top">
 		<div id="nav-container" class="container">
-
 			<div class="navbar-header">
-				<a class="navbar-brand" href="#" style="font-size: 12pt">TestMan</a>
+				<a id="testman-header" class="navbar-brand" href="#" style="font-size: 12pt">TestMan</a>
 
 				<div style="float:left;">
 					<div class="btn-group btn-group-sm navbar-btn" role="group">
-						<button id="btn-reload" class="btn btn-default" type="submit">
+						<button id="btn-reload" class="btn btn-default" type="submit" disabled="true">
 							<span class="icon-reload"></span>
 						</button>
 
-					  <div class="btn-group btn-group-sm" role="group">
-					    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-					      <span class="icon-settings"></span>
-					      <span class="caret"></span>
-					    </button>
-					    <ul class="dropdown-menu">
-					      <li><a href="#" id="link-openDevTools">Open DevTools</a></li>
-					      <li><a href="#" id="link-clearLocal">Clear LocalStorage</a></li>
-					    </ul>
-					  </div>
+						<div class="btn-group btn-group-sm" role="group">
+							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled="true">
+								<span class="icon-settings"></span>
+								<span class="caret"></span>
+						    </button>
+							<ul class="dropdown-menu">
+								<li><a href="#" id="link-openDevTools">Open DevTools</a></li>
+								<li><a href="#" id="link-clearLocal">Clear LocalStorage</a></li>
+							</ul>
+						</div>
 					</div>
 
 					<div class="btn-group btn-group-sm navbar-btn" role="group">
-						<button id="radio-fit" class="btn btn-default" type="submit"> Fit </button>
-						<button id="radio-full" class="btn btn-default" type="submit"> Full </button>
-
-					  <div class="btn-group btn-group-sm" role="group">
-					    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ratio</button>
-					    <ul class="dropdown-menu">
-					    	<li><a href="#" id="4:3">4:3</a></li>
-							<li><a href="#" id="16:9">16:9</a></li>
-							<li><a href="#" id="16:10">16:10</a></li>
-							<li><a href="#" id="3:2">3:2</a></li>
-							<li><a href="#" id="8:5">8:5</a></li>
-							<li><a href="#" id="5:3">5:3</a></li>
-							<li><a href="#" id="custom-ratio">Custom</a></li>
-					    </ul>
-					  </div>
+						<button id="radio-fit" class="btn btn-default" type="submit" disabled="true"> Fit </button>
+						<button id="radio-full" class="btn btn-default" type="submit" disabled="true"> Full </button>
+						<div class="btn-group btn-group-sm" role="group">
+							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" disabled="true">
+							Ratio <span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu">
+								<li><a href="#" id="4:3">4:3</a></li>
+								<li><a href="#" id="16:9">16:9</a></li>
+								<li><a href="#" id="16:10">16:10</a></li>
+								<li><a href="#" id="3:2">3:2</a></li>
+								<li><a href="#" id="8:5">8:5</a></li>
+								<li><a href="#" id="5:3">5:3</a></li>
+								<li><a href="#" id="custom-ratio">Custom</a></li>
+							</ul>
+						</div>
 					</div>
-
-					<!--
-					<div class="btn-group btn-group-sm" data-toggle="buttons">
-					  <label id="radio-fit" class="btn btn-default active navbar-btn">
-					    <input type="radio" name="options" id="option1" autocomplete="off" checked>Fit
-					  </label>
-					  <label id='radio-full' class="btn btn-default navbar-btn">
-					    <input type="radio" name="options" id="option2" autocomplete="off">Full
-					  </label>
-					  <label id='radio-fixed' class="btn btn-default navbar-btn">
-					    <input type="radio" name="options" id="option2" autocomplete="off">Free
-					  </label>
-					  <label id='radio-fixed' class="btn btn-default navbar-btn">
-					    <input type="radio" name="options" id="option2" autocomplete="off">Ratio
-					  </label>
-					</div>
-					-->
 				</div>
 
 				<a href="#" id="ipLink" class="navbar-link">
 					<p id="ipLabel" class="navbar-text navbar-right" style="float:right; padding-right:5px;"></p>
 				</a>
-
 			</div>
-
 		</div>
 	</nav>
+
+	<div id="menu">
+		<div id="menu-div">
+			<div id="menu-panel" class="panel panel-default">
+				<div id="options" class="btn-group-vertical" role="group" aria-label="...">
+					<button id="btn-new" type="button" class="btn btn-default">
+						<span class="icon-plus"></span> Open new
+					</button>
+
+					<button id="btn-getting-started" type="button" class="btn btn-default">
+						<span class="icon-liftoff"></span> Getting started
+					</button>
+					
+					<button id="btn-github" type="button" class="btn btn-default">
+						<span class="icon-github"></span> GitHub
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
 		
 	<div id="webview-wrapper">
 		<webview id="sandbox-webview" style="float: left; margin-left: 0 !important;" src="www.google.com" preload="src/preload.js" nodeintegration disablewebsecurity></webview>
@@ -140,17 +121,15 @@
 		<div id="modal-div">
 			<div class="panel panel-default">
 			  <div class="panel-heading">Custom Aspect Ratio</div>
+				<div class="panel-body">
+				  	<input id="input-width" type="number" class="form-control" placeholder="width">
+					<input id="input-height" type="number" class="form-control" placeholder="height">
 
-			  <div class="panel-body">
-			  	<input id="input-width" type="number" class="form-control" placeholder="width">
-				<input id="input-height" type="number" class="form-control" placeholder="height">
-
-				<div style="float: right; margin-top: 5px;">
-					<button id="btn-cancel-modal" type="button" class="btn btn-default">Cancel</button>
-					<button id="btn-accept-modal" type="button" class="btn btn-success">Accept</button>
+					<div style="float: right; margin-top: 10px;">
+						<button id="btn-cancel-modal" type="button" class="btn btn-default">Cancel</button>
+						<button id="btn-accept-modal" type="button" class="btn btn-success">Accept</button>
+					</div>
 				</div>
-			  </div>
-
 			</div>
 		</div>
 	</div>
