@@ -7,7 +7,7 @@ class SandboxManager {
 		this.canvasWidth = 1;
 		this.canvasHeight = 1;
 		this.aspectRatio = 1;
-		this.toolbarOffset = 25 + (window.outerHeight - window.innerHeight);
+		this.toolbarOffset = 50 + (window.outerHeight - window.innerHeight);
 		this.scaleMode = 'fit';	//Flags window current scale mode
 		this.returnScaleMode = 'toFit';	//Flags scale mode to return to after exiting full-screen mode
 		
@@ -163,6 +163,7 @@ class SandboxManager {
 			var socketID = 'socket'+ _this.socketID++;
 
 			_this.connections[socketID] = socket;
+			socket.setKeepAlive(true);
 
 			socket.on('close', function(){
 				delete _this.connections[socketID];
@@ -171,21 +172,6 @@ class SandboxManager {
 
 	}
 
-	/**
-	 * Reduces width/height by 20% until the both will fit within the available screen space
-	 * @param {Number} width 
-	 * @param {Number} height
-	 * @param {Number} padding - Amount of extra space to consider as part of the width/height\
-	 * @return {Object} - New width/height measurement
-	 */
-	getBounds(width, height, padding){
-
-		if (width > (window.screen.width - padding) || height > (window.screen.height - padding)) {
-			return this.getBounds(width * .80, height * .80, padding);
-		}
-
-		return { width: width, height: height }
-	}
 
 	/**
 	 * Asynchronously fetches width/height of first canvas found in the sandbox webveiw, passes both as callback params 
@@ -237,7 +223,7 @@ class SandboxManager {
 
 		var wrapper = document.getElementById('webview-wrapper');
 			wrapper.style.width = '100vw';
-			wrapper.style.height = '100vh';
+			wrapper.style.height = 'calc(100vh - 50px)';
 
 		this.sandboxWin.setTitle("TestMan - FULL");
 		this.scaleMode = 'full';
