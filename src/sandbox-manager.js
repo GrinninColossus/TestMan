@@ -7,11 +7,14 @@ class SandboxManager {
 		this.canvasWidth = 1;
 		this.canvasHeight = 1;
 		this.aspectRatio = 1;
-		this.initDone = false;	//Flag so that events aren't added more than once
 		this.toolbarOffset = 25 + (window.outerHeight - window.innerHeight);
 		this.scaleMode = 'fit';	//Flags window current scale mode
 		this.returnScaleMode = 'toFit';	//Flags scale mode to return to after exiting full-screen mode
-		this.fixedSize = {width: 500, height: 500}	//Keeps track of user-defined fixed window size
+		
+		this.server = undefined;	//Reference to active HTTP server
+		this.connections = {};	//Object collection of Socket objects for all active connections
+		this.socketID = 0;
+
 		this.sandboxWin = remote.getCurrentWindow();	//Reference to electron BrowserWindow
 		this.sandboxWin.setMaximizable(false);
 		this.sandboxWin.setResizable(false);
@@ -20,70 +23,105 @@ class SandboxManager {
 
 	/** Init event listeners for the sandbox toolbar */
 	init(){
-		if (!this.initDone){
-			this.initDone = true;
+		var _this = this;
 
-			var _this = this;
+		document.getElementById('btn-reload').addEventListener('click', this.reloadWebview.bind(this));
+		document.getElementById('radio-fit').addEventListener('click', this.toFit.bind(this));
+		document.getElementById('radio-full').addEventListener('click', this.toFull.bind(this));
 
-			document.getElementById('btn-reload').addEventListener('click', this.reloadWebview.bind(this));
-			document.getElementById('radio-fit').addEventListener('click', this.toFit.bind(this));
-			document.getElementById('radio-full').addEventListener('click', this.toFull.bind(this));
+		document.getElementById('4:3').addEventListener('click', function(){ this.toRatio(4, 3); }.bind(this));
+		document.getElementById('16:9').addEventListener('click', function(){ this.toRatio(16, 9); }.bind(this));
+		document.getElementById('16:10').addEventListener('click', function(){ this.toRatio(16, 10); }.bind(this));
+		document.getElementById('3:2').addEventListener('click', function(){ this.toRatio(3, 2); }.bind(this));
+		document.getElementById('8:5').addEventListener('click', function(){ this.toRatio(8, 5); }.bind(this));
+		document.getElementById('5:3').addEventListener('click', function(){ this.toRatio(5, 3); }.bind(this));
 
-			document.getElementById('4:3').addEventListener('click', function(){ this.toRatio(4, 3); }.bind(this));
-			document.getElementById('16:9').addEventListener('click', function(){ this.toRatio(16, 9); }.bind(this));
-			document.getElementById('16:10').addEventListener('click', function(){ this.toRatio(16, 10); }.bind(this));
-			document.getElementById('3:2').addEventListener('click', function(){ this.toRatio(3, 2); }.bind(this));
-			document.getElementById('8:5').addEventListener('click', function(){ this.toRatio(8, 5); }.bind(this));
-			document.getElementById('5:3').addEventListener('click', function(){ this.toRatio(5, 3); }.bind(this));
+		/** Hides and unhides modal */
+		document.getElementById('btn-cancel-modal').addEventListener('click', function(){ 
+			document.getElementById('modal').style.visibility = 'hidden';
+		 }.bind(this));
 
-			/** Hides and unhides modal */
-			document.getElementById('btn-cancel-modal').addEventListener('click', function(){ 
-				document.getElementById('modal').style.visibility = 'hidden';
-			 }.bind(this));
+		document.getElementById('custom-ratio').addEventListener('click', function(){ 
+			document.getElementById('modal').style.visibility = 'visible';
+		 }.bind(this));
 
-			document.getElementById('custom-ratio').addEventListener('click', function(){ 
-				document.getElementById('modal').style.visibility = 'visible';
-			 }.bind(this));
+		/** Sets custom aspect ratio size */
+		document.getElementById('btn-accept-modal').addEventListener('click', function(){ 
 
-			/** Sets custom aspect ratio size */
-			document.getElementById('btn-accept-modal').addEventListener('click', function(){ 
+			var width = document.getElementById('input-width').value;
+			var height = document.getElementById('input-height').value;
+			document.getElementById('modal').style.visibility = 'hidden';
 
-				var width = document.getElementById('input-width').value;
-				var height = document.getElementById('input-height').value;
-				document.getElementById('modal').style.visibility = 'hidden';
+			this.toRatio(width, height);
 
-				this.toRatio(width, height);
+		 }.bind(this));
 
-			 }.bind(this));
+		/** Opens the dev tools for the webview */
+		document.getElementById('link-openDevTools').addEventListener('click', function(){ 
+			document.getElementById('sandbox-webview').openDevTools();
+		});
 
-			/** Opens the dev tools for the webview */
-			document.getElementById('link-openDevTools').addEventListener('click', function(){ 
-				document.getElementById('sandbox-webview').openDevTools();
-			});
+		/** Clears local storage for electron BrowserWindow as well as the webview */
+		document.getElementById('link-clearLocal').addEventListener('click', function(){
+			localStorage.clear();
+			document.getElementById('sandbox-webview').executeJavaScript("localStorage.clear();");
 
-			/** Clears local storage for electron BrowserWindow as well as the webview */
-			document.getElementById('link-clearLocal').addEventListener('click', function(){
-				localStorage.clear();
-				document.getElementById('sandbox-webview').executeJavaScript("localStorage.clear();");
+			toastr.success("Local storage cleared");
+		});
 
-				toastr.success("Local storage cleared");
-			});
+		/** Allows escape key to be used to leave full-screen and returns scale-mode to what it was previously */
+		document.addEventListener('keydown', function(event){
+			if (event.key == 'Escape'){
+				_this.sandboxWin.setFullScreen(false);
+				_this[_this.returnScaleMode]();
+			}
+		});
 
-			/** Allows escape key to be used to leave full-screen and returns scale-mode to what it was previously */
-			document.addEventListener('keydown', function(event){
-				if (event.key == 'Escape'){
-					_this.sandboxWin.setFullScreen(false);
-					_this[_this.returnScaleMode]();
-				}
-			});
+		/** Opens the webview content in the browser */
+		document.getElementById('ipLabel').addEventListener('click', function(e){
+			e.preventDefault();
+			shell.openExternal('http://'+this.href, {active: true});
 
-			/** Opens the webview content in the browser */
-			document.getElementById('ipLabel').addEventListener('click', function(e){
-				e.preventDefault();
-				shell.openExternal('http://'+this.href, {active: true});
+			toastr.success("Opened in browser");
+		});
+	}
 
-				toastr.success("Opened in browser");
-			});
+	/**
+	 * Attempts to close all open connections on the active server so that the same port can be used again
+	 * @param {String} localPath - Passed to initLocalHost upon success
+	 * @param {Number} port - Pass to initLocalHost upon success
+	 */
+	closeExistingConnections(localPath, port){
+		
+		//The server is null if this is 
+		if (this.server) { 
+			this.server.close()
+			this.server = null;
+
+			var socketKeys = Object.keys(this.connections);
+			for (var i = 0; i < socketKeys.length; i++){
+				this.connections[socketKeys[i]].destroy();
+			}
+
+		} else {
+			return;
+		} 
+
+		//Repeat check until all socket connections are closed, then proceed to initLocalHost
+		if (Object.keys(this.connections).length > 0){
+
+			setTimeout(function(){
+
+				console.log("Timeout...");
+
+				this.closeExistingConnections(localPath, port);
+
+			}.bind(this), 100);
+
+		} else {
+
+			this.initLocalHost(localPath, port);
+
 		}
 
 	}
@@ -94,13 +132,19 @@ class SandboxManager {
 	 * @param {Number} port - The port on which to serve the content in the given directory
 	 */
 	initLocalHost(localPath, port){
+		this.closeExistingConnections(localPath, port);
+
+		var express = require('express');
+		var app = express();
 
 		var _this = this;
 		var listenOn = port;
 
+		//Set static directory from which to server content
 		app.use(express.static(path.parse(localPath).dir));
-		app.use(express.static(path.join(path.parse(localPath).dir, '/FOLDERTOHTMLFILESTOSERVER')));
-		app.listen(listenOn, "0.0.0.0", 511, function(){
+
+		//Set up the server, try next port if the current one is busy
+		this.server = app.listen(listenOn, "0.0.0.0", 511, function(){
 
 			var ipLabel = document.getElementById('ipLabel');
 			var ipPlusPort = ip.address() + ":" + listenOn;
@@ -112,6 +156,19 @@ class SandboxManager {
 			_this.initLocalHost(localPath, listenOn + 80);
 
 		});
+
+		//On each connection event, add the socket to the connections collection object
+		//and subscribe to 'close' event, at which point the socket will remove its own reference from the collection
+		this.server.on('connection', function(socket){
+			var socketID = 'socket'+ _this.socketID++;
+
+			_this.connections[socketID] = socket;
+
+			socket.on('close', function(){
+				delete _this.connections[socketID];
+			});
+		});
+
 	}
 
 	/**
