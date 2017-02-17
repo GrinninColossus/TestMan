@@ -46,8 +46,8 @@ UI.MainMenu = {
 						sandboxManager.toFit();
 					});
 
-	    		sandboxManager.initLocalHost(path[0], 8000);
-
+				sandboxManager.initLocalHost(path[0], 8000);
+	    	
 			}
 		});
 

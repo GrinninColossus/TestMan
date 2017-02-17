@@ -12,8 +12,7 @@ class SandboxManager {
 		this.returnScaleMode = 'toFit';	//Flags scale mode to return to after exiting full-screen mode
 		
 		this.server = undefined;	//Reference to active HTTP server
-		this.connections = {};	//Object collection of Socket objects for all active connections
-		this.socketID = 0;
+		this.connections = [];	//Object collection of Socket objects for all active connections
 
 		this.sandboxWin = remote.getCurrentWindow();	//Reference to electron BrowserWindow
 		this.sandboxWin.setMaximizable(false);
@@ -86,44 +85,20 @@ class SandboxManager {
 		});
 	}
 
-	/**
-	 * Attempts to close all open connections on the active server so that the same port can be used again
-	 * @param {String} localPath - Passed to initLocalHost upon success
-	 * @param {Number} port - Pass to initLocalHost upon success
-	 */
-	closeExistingConnections(localPath, port){
-		
-		//The server is null if this is 
-		if (this.server) { 
-			this.server.close()
-			this.server = null;
+	/** Close all open connections on the active server so that the same port can be used again */
+	closeExistingConnections(){
+		if (this.server){ 
+			this.server.close(); 
+			this.server = undefined;
 
-			var socketKeys = Object.keys(this.connections);
-			for (var i = 0; i < socketKeys.length; i++){
-				this.connections[socketKeys[i]].destroy();
-			}
+			this.connections.forEach(function(socket){
 
-		} else {
-			return;
-		} 
+				socket.destroy();
 
-		//Repeat check until all socket connections are closed, then proceed to initLocalHost
-		if (Object.keys(this.connections).length > 0){
+			});
 
-			setTimeout(function(){
-
-				console.log("Timeout...");
-
-				this.closeExistingConnections(localPath, port);
-
-			}.bind(this), 100);
-
-		} else {
-
-			this.initLocalHost(localPath, port);
-
+			this.connections = [];
 		}
-
 	}
 
 	/**
@@ -132,42 +107,33 @@ class SandboxManager {
 	 * @param {Number} port - The port on which to serve the content in the given directory
 	 */
 	initLocalHost(localPath, port){
-		this.closeExistingConnections(localPath, port);
-
-		var express = require('express');
-		var app = express();
-
+		this.closeExistingConnections();
+		
 		var _this = this;
-		var listenOn = port;
 
-		//Set static directory from which to server content
-		app.use(express.static(path.parse(localPath).dir));
+		var app = express();
+			app.use(express.static(path.parse(localPath).dir)); //Set static directory
 
 		//Set up the server, try next port if the current one is busy
-		this.server = app.listen(listenOn, "0.0.0.0", 511, function(){
+		this.server = app.listen(port, "0.0.0.0", 511, function(){
 
 			var ipLabel = document.getElementById('ipLabel');
-			var ipPlusPort = ip.address() + ":" + listenOn;
+			var ipPlusPort = ip.address() + ":" + port;
 			ipLabel.innerHTML = ipPlusPort;
 			ipLabel.href = ipPlusPort;
 
 		}).on('error', function(err){
 			
-			_this.initLocalHost(localPath, listenOn + 80);
+			console.log(err);
+			console.log("Busy: " + port);
+
+			_this.initLocalHost(localPath, port + 10);
 
 		});
 
-		//On each connection event, add the socket to the connections collection object
-		//and subscribe to 'close' event, at which point the socket will remove its own reference from the collection
+		//Keep track of active connections so that they can be manually closed
 		this.server.on('connection', function(socket){
-			var socketID = 'socket'+ _this.socketID++;
-
-			_this.connections[socketID] = socket;
-			socket.setKeepAlive(true);
-
-			socket.on('close', function(){
-				delete _this.connections[socketID];
-			});
+			_this.connections.push(socket);
 		});
 
 	}
@@ -205,7 +171,7 @@ class SandboxManager {
 		this.getCanvasScaleRatio(function(width, height){
 
 			this.toRatio(height, width);
-
+			
 			this.sandboxWin.setTitle("TestMan - FIT");
 			this.scaleMode = 'fit';
 
