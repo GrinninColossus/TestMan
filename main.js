@@ -5,7 +5,7 @@ let win;
 function createWindow () {
 
   win = new BrowserWindow({width: 450, height: 600,
-                          icon: 'resources/testman-logo-128x128.png',
+                          icon: 'resources/testman-logo-512x512.png',
                           webPreferences: { 
                                             webSecurity: false
                                           }, 
