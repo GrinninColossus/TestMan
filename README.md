@@ -1,6 +1,4 @@
-### NOTE:
-
-This project was primarily a learning exercise and it's primary utility could be easily replaced with a couple scripts. 
+**NOTE: This project was primarily a learning exercise and it's primary utility could be easily replaced with a couple scripts.**
 
 # TestMan
 
