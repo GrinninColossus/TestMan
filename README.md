@@ -1,3 +1,7 @@
+### NOTE:
+
+This project was primarily a learning exercise and it's primary utility could be easily replaced with a couple scripts. 
+
 # TestMan
 
 TestMan is a simple desktop app designed to ease testing for HTML5 games or other canvas-based applications. TestMan is designed
